@@ -1,0 +1,29 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: backend_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: agenda_user
+      POSTGRES_PASSWORD: agenda_pass
+      POSTGRES_DB: agenda_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "9877:5432"
+
+  backend:
+    build: .
+    container_name: agenda_backend
+    restart: always
+    depends_on:
+      - postgres
+    ports:
+      - "7789:5000"
+    environment:
+      DATABASE_URL: postgresql://agenda_user:agenda_pass@postgres:5432/agenda_db
+
+volumes:
+  pgdata:
