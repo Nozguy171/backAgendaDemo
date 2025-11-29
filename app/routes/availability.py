@@ -17,11 +17,17 @@ def get_week_availability():
     # ============================
     # 🔥 HORARIOS POR DÍA
     # ============================
+    # ============================
+    # 🔥 HORARIOS POR DÍA
+    # ============================
     week_start = tenant.hours_start_week or "10:00"
     week_end   = tenant.hours_end_week or "19:00"
 
     sat_start = tenant.hours_start_sat or "10:00"
     sat_end   = tenant.hours_end_sat or "16:00"
+
+    sun_start = tenant.hours_start_sun or "10:00"
+    sun_end   = tenant.hours_end_sun or "16:00"
 
     # ============================
     # 🔥 DÍAS LABORALES
@@ -54,6 +60,7 @@ def get_week_availability():
         block = start_dt
         while block < end_dt:
             busy.append({
+                "id": a.id,   # <-- ADD THIS
                 "start": block.strftime("%Y-%m-%dT%H:%M:%S"),
                 "end": (block + timedelta(minutes=15)).strftime("%Y-%m-%dT%H:%M:%S")
             })
@@ -74,12 +81,16 @@ def get_week_availability():
     return jsonify({
         "workingDays": working_days,
 
-        # 👉 FRONT RECIBE LOS DOS HORARIOS
         "weekStart": week_start,
         "weekEnd": week_end,
+
         "satStart": sat_start,
         "satEnd": sat_end,
+
+        "sunStart": sun_start,
+        "sunEnd": sun_end,
 
         "busySlots": busy,
         "services": services_data
     })
+

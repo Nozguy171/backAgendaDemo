@@ -22,6 +22,10 @@ class Tenant(db.Model):
     hours_start_sat = db.Column(db.String(10))
     hours_end_sat = db.Column(db.String(10))
 
+    # Horario domingo
+    hours_start_sun = db.Column(db.String(10))
+    hours_end_sun = db.Column(db.String(10))
+
     working_days = db.Column(db.String(50))
 
 class Service(db.Model):

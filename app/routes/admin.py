@@ -53,8 +53,12 @@ def get_settings():
         "satStart": tenant.hours_start_sat,
         "satEnd": tenant.hours_end_sat,
 
+        "sunStart": tenant.hours_start_sun,
+        "sunEnd": tenant.hours_end_sun,
+
         "workingDays": working_days,
     })
+
 
 
 @admin_bp.put("/settings")
@@ -70,6 +74,8 @@ def update_settings():
 
     tenant.hours_start_sat = data.get("satStart", tenant.hours_start_sat)
     tenant.hours_end_sat = data.get("satEnd", tenant.hours_end_sat)
+    tenant.hours_start_sun = data.get("sunStart", tenant.hours_start_sun)
+    tenant.hours_end_sun = data.get("sunEnd", tenant.hours_end_sun)
 
     if "workingDays" in data:
         tenant.working_days = ",".join(str(x) for x in data["workingDays"])
@@ -282,3 +288,38 @@ def create_appointment():
     db.session.commit()
 
     return jsonify(appointment_to_dict(appt)), 201
+
+@admin_bp.delete("/appointments/<int:appointment_id>")
+def delete_appointment(appointment_id):
+    appt = Appointment.query.get_or_404(appointment_id)
+    db.session.delete(appt)
+    db.session.commit()
+    return jsonify({"ok": True})
+
+@admin_bp.put("/appointments/<int:appointment_id>")
+def update_appointment(appointment_id):
+    data = request.json or {}
+    appt = Appointment.query.get_or_404(appointment_id)
+
+    # Cambiar servicio
+    if "serviceId" in data:
+        service = Service.query.get(data["serviceId"])
+        if not service:
+            return jsonify({"error": "Service not found"}), 404
+        appt.service_id = service.id
+        # recalcular end_time
+        start_dt = datetime.combine(appt.date, appt.start_time)
+        appt.end_time = (start_dt + timedelta(minutes=service.duration_minutes)).time()
+
+    # Reagendar
+    if "start" in data:
+        start_dt = datetime.fromisoformat(data["start"])
+        appt.date = start_dt.date()
+        appt.start_time = start_dt.time()
+
+    if "end" in data:
+        end_dt = datetime.fromisoformat(data["end"])
+        appt.end_time = end_dt.time()
+
+    db.session.commit()
+    return jsonify({"ok": True, "appointment": appointment_to_dict(appt)})
